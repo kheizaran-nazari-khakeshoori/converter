@@ -1,0 +1,8 @@
+pymupdf
+ebooklib
+arabic-reshaper
+python-bidi
+
+# Optional OCR dependencies
+# pytesseract
+# pillow
