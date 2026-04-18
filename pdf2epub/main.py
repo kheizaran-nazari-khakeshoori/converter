@@ -7,7 +7,14 @@ from epub_builder import create_epub
 
 
 if __name__ == '__main__':
-    pdf_path = sys.argv[1] if len(sys.argv) > 1 else 'input.pdf'
+    args = sys.argv[1:]
+    force_ocr = False
+
+    if '--ocr' in args:
+        force_ocr = True
+        args.remove('--ocr')
+
+    pdf_path = args[0] if args else 'input.pdf'
     output_path = 'output.epub'
 
     if not os.path.isfile(pdf_path):
@@ -15,10 +22,20 @@ if __name__ == '__main__':
         print("Place your PDF at pdf2epub/input.pdf or pass a path as an argument.")
         sys.exit(1)
 
-    raw_text = extract_text(pdf_path)
-    print('--- RAW TEXT PREVIEW ---')
+    try:
+        raw_text, used_ocr = extract_text(pdf_path, force_ocr=force_ocr)
+    except RuntimeError as exc:
+        print(f"Error: {exc}")
+        print("Install OCR dependencies with: pip install pytesseract pillow")
+        sys.exit(1)
+
+    if used_ocr:
+        print('--- OCR TEXT PREVIEW ---')
+    else:
+        print('--- RAW TEXT PREVIEW ---')
+
     print(raw_text[:1000])
-    print('--- END RAW TEXT PREVIEW ---\n')
+    print('--- END TEXT PREVIEW ---\n')
 
     clean_text = fix_persian_text(raw_text)
     paragraphs = split_paragraphs(clean_text)

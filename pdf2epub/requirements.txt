@@ -2,7 +2,9 @@ pymupdf
 ebooklib
 arabic-reshaper
 python-bidi
+pytesseract
+pillow
 
-# Optional OCR dependencies
-# pytesseract
-# pillow
+# If you want OCR for scanned PDFs, install the system Tesseract engine too.
+# On Debian/Ubuntu:
+# sudo apt install tesseract-ocr tesseract-ocr-fas
