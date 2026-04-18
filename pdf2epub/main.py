@@ -1,11 +1,19 @@
+import os
+import sys
+
 from extractor import extract_text
 from cleaner import fix_persian_text, split_paragraphs
 from epub_builder import create_epub
 
 
 if __name__ == '__main__':
-    pdf_path = 'input.pdf'
+    pdf_path = sys.argv[1] if len(sys.argv) > 1 else 'input.pdf'
     output_path = 'output.epub'
+
+    if not os.path.isfile(pdf_path):
+        print(f"Error: PDF file not found: {pdf_path}")
+        print("Place your PDF at pdf2epub/input.pdf or pass a path as an argument.")
+        sys.exit(1)
 
     raw_text = extract_text(pdf_path)
     print('--- RAW TEXT PREVIEW ---')
