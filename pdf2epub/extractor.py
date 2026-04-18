@@ -13,15 +13,18 @@ except ImportError:
 
 
 @contextlib.contextmanager
-def suppress_stderr():
-    fd = sys.stderr.fileno()
+def suppress_output():
+    old_stdout = os.dup(sys.stdout.fileno())
+    old_stderr = os.dup(sys.stderr.fileno())
     with open(os.devnull, 'w') as devnull:
-        old_stderr = os.dup(fd)
-        os.dup2(devnull.fileno(), fd)
+        os.dup2(devnull.fileno(), sys.stdout.fileno())
+        os.dup2(devnull.fileno(), sys.stderr.fileno())
         try:
             yield
         finally:
-            os.dup2(old_stderr, fd)
+            os.dup2(old_stdout, sys.stdout.fileno())
+            os.dup2(old_stderr, sys.stderr.fileno())
+            os.close(old_stdout)
             os.close(old_stderr)
 
 
@@ -46,7 +49,7 @@ def ocr_page(page):
             "OCR dependencies are not installed. Install pytesseract and pillow to use OCR."
         )
 
-    with suppress_stderr():
+    with suppress_output():
         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
 
     img_data = pix.tobytes("png")
@@ -56,7 +59,7 @@ def ocr_page(page):
 
 def extract_text(pdf_path, force_ocr=False):
     try:
-        with suppress_stderr():
+        with suppress_output():
             doc = fitz.open(pdf_path)
     except Exception as exc:
         raise RuntimeError(f"Failed to open PDF: {exc}") from exc
@@ -67,7 +70,7 @@ def extract_text(pdf_path, force_ocr=False):
     for page_number, page in enumerate(doc, start=1):
         try:
             if not force_ocr:
-                with suppress_stderr():
+                with suppress_output():
                     text = page.get_text()
 
                 if text and text.strip():
