@@ -3,9 +3,16 @@ from bidi.algorithm import get_display
 
 
 def fix_persian_text(text):
-    reshaped = arabic_reshaper.reshape(text)
-    bidi_text = get_display(reshaped)
-    return bidi_text
+    if not text:
+        return text
+
+    fixed_lines = []
+    for line in text.splitlines(keepends=True):
+        reshaped = arabic_reshaper.reshape(line)
+        bidi_text = get_display(reshaped)
+        fixed_lines.append(bidi_text)
+
+    return "".join(fixed_lines)
 
 
 def split_paragraphs(text):
