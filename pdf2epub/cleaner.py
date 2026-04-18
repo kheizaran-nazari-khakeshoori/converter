@@ -1,3 +1,5 @@
+import re
+
 import arabic_reshaper
 from bidi.algorithm import get_display
 
@@ -8,9 +10,20 @@ def fix_persian_text(text):
 
     fixed_lines = []
     for line in text.splitlines(keepends=True):
-        reshaped = arabic_reshaper.reshape(line)
-        bidi_text = get_display(reshaped)
-        fixed_lines.append(bidi_text)
+        parts = re.split(r'(	|
+|||
+|\s+)', line)
+        fixed_line = ""
+
+        for part in parts:
+            if part.isspace():
+                fixed_line += part
+            else:
+                reshaped = arabic_reshaper.reshape(part)
+                bidi_text = get_display(reshaped)
+                fixed_line += bidi_text
+
+        fixed_lines.append(fixed_line)
 
     return "".join(fixed_lines)
 
