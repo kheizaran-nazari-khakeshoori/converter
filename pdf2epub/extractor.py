@@ -1,4 +1,7 @@
+import contextlib
 import fitz  # PyMuPDF
+import os
+import sys
 
 try:
     from PIL import Image
@@ -6,6 +9,19 @@ try:
 except ImportError:
     Image = None
     pytesseract = None
+
+
+@contextlib.contextmanager
+def suppress_stderr():
+    fd = sys.stderr.fileno()
+    with open(os.devnull, 'w') as devnull:
+        old_stderr = os.dup(fd)
+        os.dup2(devnull.fileno(), fd)
+        try:
+            yield
+        finally:
+            os.dup2(old_stderr, fd)
+            os.close(old_stderr)
 
 
 def is_scan_like_text(text):
@@ -29,7 +45,9 @@ def ocr_page(page):
             "OCR dependencies are not installed. Install pytesseract and pillow to use OCR."
         )
 
-    pix = page.get_pixmap(dpi=300)
+    with suppress_stderr():
+        pix = page.get_pixmap(dpi=300)
+
     mode = "RGBA" if pix.alpha else "RGB"
     img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
     return pytesseract.image_to_string(img, lang="fas+ara")
@@ -37,7 +55,8 @@ def ocr_page(page):
 
 def extract_text(pdf_path, force_ocr=False):
     try:
-        doc = fitz.open(pdf_path)
+        with suppress_stderr():
+            doc = fitz.open(pdf_path)
     except Exception as exc:
         raise RuntimeError(f"Failed to open PDF: {exc}") from exc
 
@@ -50,9 +69,9 @@ def extract_text(pdf_path, force_ocr=False):
             used_ocr = True
         else:
             try:
-                text = page.get_text()
+                with suppress_stderr():
+                    text = page.get_text()
             except Exception as exc:
-                print(f"MuPDF text extraction failed on page {page_number}: {exc}")
                 text = None
 
             if not text or is_scan_like_text(text):
