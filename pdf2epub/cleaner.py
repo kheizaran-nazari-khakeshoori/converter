@@ -10,9 +10,7 @@ def fix_persian_text(text):
 
     fixed_lines = []
     for line in text.splitlines(keepends=True):
-        parts = re.split(r'(	|
-|||
-|\s+)', line)
+        parts = re.split(r'(\s+)', line)
         fixed_line = ""
 
         for part in parts:
