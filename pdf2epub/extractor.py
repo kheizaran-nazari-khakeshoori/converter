@@ -36,20 +36,36 @@ def ocr_page(page):
 
 
 def extract_text(pdf_path, force_ocr=False):
-    doc = fitz.open(pdf_path)
+    try:
+        doc = fitz.open(pdf_path)
+    except Exception as exc:
+        raise RuntimeError(f"Failed to open PDF: {exc}") from exc
+
     full_text = ""
     used_ocr = False
 
-    for page in doc:
+    for page_number, page in enumerate(doc, start=1):
         if force_ocr:
             text = ocr_page(page)
             used_ocr = True
         else:
-            text = page.get_text()
-            if is_scan_like_text(text):
-                text = ocr_page(page)
-                used_ocr = True
+            try:
+                text = page.get_text()
+            except Exception as exc:
+                print(f"MuPDF text extraction failed on page {page_number}: {exc}")
+                text = None
 
-        full_text += text + "\n"
+            if not text or is_scan_like_text(text):
+                try:
+                    text = ocr_page(page)
+                    used_ocr = True
+                except RuntimeError:
+                    raise
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"OCR failed for page {page_number}: {exc}"
+                    ) from exc
+
+        full_text += (text or "") + "\n"
 
     return full_text, used_ocr
