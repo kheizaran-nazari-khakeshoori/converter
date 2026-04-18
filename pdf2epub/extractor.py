@@ -1,5 +1,6 @@
 import contextlib
 import fitz  # PyMuPDF
+import io
 import os
 import sys
 
@@ -46,11 +47,11 @@ def ocr_page(page):
         )
 
     with suppress_stderr():
-        pix = page.get_pixmap(dpi=300)
+        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
 
-    mode = "RGBA" if pix.alpha else "RGB"
-    img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
-    return pytesseract.image_to_string(img, lang="fas+ara")
+    img_data = pix.tobytes("png")
+    img = Image.open(io.BytesIO(img_data))
+    return pytesseract.image_to_string(img, lang="fas")
 
 
 def extract_text(pdf_path, force_ocr=False):
@@ -64,27 +65,21 @@ def extract_text(pdf_path, force_ocr=False):
     used_ocr = False
 
     for page_number, page in enumerate(doc, start=1):
-        if force_ocr:
-            text = ocr_page(page)
-            used_ocr = True
-        else:
-            try:
+        try:
+            if not force_ocr:
                 with suppress_stderr():
                     text = page.get_text()
-            except Exception as exc:
-                text = None
 
-            if not text or is_scan_like_text(text):
-                try:
-                    text = ocr_page(page)
-                    used_ocr = True
-                except RuntimeError:
-                    raise
-                except Exception as exc:
-                    raise RuntimeError(
-                        f"OCR failed for page {page_number}: {exc}"
-                    ) from exc
+                if text and text.strip():
+                    full_text += text + "\n"
+                    continue
 
-        full_text += (text or "") + "\n"
+            text = ocr_page(page)
+            used_ocr = True
+            full_text += (text or "") + "\n"
+
+        except Exception as exc:
+            print(f"[WARNING] Page {page_number} failed: {exc}")
+            continue
 
     return full_text, used_ocr
