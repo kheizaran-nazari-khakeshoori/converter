@@ -1,5 +1,4 @@
 import re
-from bidi.algorithm import get_display
 
 
 def fix_persian_text(text):
@@ -15,7 +14,7 @@ def fix_persian_text(text):
             if part.isspace():
                 fixed_line += part
             else:
-                fixed_line += get_display(part)
+                fixed_line += part[::-1]
 
         fixed_lines.append(fixed_line)
 
