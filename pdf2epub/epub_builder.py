@@ -18,15 +18,15 @@ def create_epub(paragraphs, output_path):
     )
 
     chapter.content = f"""
-    <html lang="fa" dir="rtl">
+    <html dir="rtl" lang="fa">
     <head>
       <meta charset="utf-8" />
       <style>
-        body {{ direction: rtl; unicode-bidi: embed; font-family: sans-serif; }}
+        body {{ direction: rtl; text-align: right; font-family: sans-serif; }}
         p {{ text-align: right; margin: 0 0 1em; }}
       </style>
     </head>
-    <body>
+    <body style="direction: rtl; text-align: right;">
     {content}
     </body>
     </html>
