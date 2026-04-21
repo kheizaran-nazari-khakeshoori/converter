@@ -1,6 +1,4 @@
 import re
-
-import arabic_reshaper
 from bidi.algorithm import get_display
 
 
@@ -17,9 +15,7 @@ def fix_persian_text(text):
             if part.isspace():
                 fixed_line += part
             else:
-                reshaped = arabic_reshaper.reshape(part)
-                bidi_text = get_display(reshaped)
-                fixed_line += bidi_text
+                fixed_line += get_display(part)
 
         fixed_lines.append(fixed_line)
 
