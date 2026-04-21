@@ -5,20 +5,14 @@ def fix_persian_text(text):
     if not text:
         return text
 
-    fixed_lines = []
-    for line in text.splitlines(keepends=True):
-        parts = re.split(r'(\s+)', line)
-        fixed_line = ""
-
-        for part in parts:
-            if part.isspace():
-                fixed_line += part
-            else:
-                fixed_line += part[::-1]
-
-        fixed_lines.append(fixed_line)
-
-    return "".join(fixed_lines)
+    tokens = re.findall(r'\S+|\s+', text)
+    fixed = []
+    for token in tokens:
+        if token.isspace():
+            fixed.append(token)
+        else:
+            fixed.append(token[::-1])
+    return ''.join(fixed)
 
 
 def split_paragraphs(text):
