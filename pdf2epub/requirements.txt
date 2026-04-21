@@ -4,6 +4,7 @@ arabic-reshaper
 python-bidi
 pytesseract
 pillow
+pdfplumber
 
 # If you want OCR for scanned PDFs, install the system Tesseract engine too.
 # On Debian/Ubuntu:

@@ -11,6 +11,11 @@ except ImportError:
     Image = None
     pytesseract = None
 
+try:
+    import pdfplumber
+except ImportError:
+    pdfplumber = None
+
 
 @contextlib.contextmanager
 def suppress_output():
@@ -53,8 +58,26 @@ def ocr_page(page):
         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
 
     img_data = pix.tobytes("png")
-    img = Image.open(io.BytesIO(img_data))
-    return pytesseract.image_to_string(img, lang="fas")
+    img = Image.open(io.BytesIO(img_data)).convert("L")
+    return pytesseract.image_to_string(img, lang="fas", config="--psm 6")
+
+
+def extract_with_pdfplumber(pdf_path):
+    if pdfplumber is None:
+        raise RuntimeError(
+            "pdfplumber is not installed. Install it with pip install pdfplumber."
+        )
+
+    full_text = ""
+    with pdfplumber.open(pdf_path) as pdf:
+        for page_number, page in enumerate(pdf.pages, start=1):
+            try:
+                page_text = page.extract_text() or ""
+            except Exception:
+                page_text = ""
+            full_text += page_text + "\n"
+
+    return full_text
 
 
 def extract_text(pdf_path, force_ocr=False):
@@ -66,6 +89,7 @@ def extract_text(pdf_path, force_ocr=False):
 
     full_text = ""
     used_ocr = False
+    used_pdfplumber = False
 
     for page_number, page in enumerate(doc, start=1):
         try:
@@ -85,4 +109,12 @@ def extract_text(pdf_path, force_ocr=False):
             print(f"[WARNING] Page {page_number} failed: {exc}")
             continue
 
-    return full_text, used_ocr
+    if not full_text.strip() and not force_ocr and pdfplumber is not None:
+        try:
+            full_text = extract_with_pdfplumber(pdf_path)
+            if full_text.strip():
+                used_pdfplumber = True
+        except Exception:
+            pass
+
+    return full_text, used_ocr, used_pdfplumber

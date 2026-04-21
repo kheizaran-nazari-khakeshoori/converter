@@ -23,13 +23,15 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        raw_text, used_ocr = extract_text(pdf_path, force_ocr=force_ocr)
+        raw_text, used_ocr, used_pdfplumber = extract_text(pdf_path, force_ocr=force_ocr)
     except RuntimeError as exc:
         print(f"Error: {exc}")
         print("Install OCR dependencies with: pip install pytesseract pillow")
         sys.exit(1)
 
-    if used_ocr:
+    if used_pdfplumber:
+        print('--- PDFPlumber TEXT PREVIEW ---')
+    elif used_ocr:
         print('--- OCR TEXT PREVIEW ---')
     else:
         print('--- RAW TEXT PREVIEW ---')
@@ -47,3 +49,5 @@ if __name__ == '__main__':
 
     create_epub(paragraphs, output_path)
     print(f'Created EPUB: {output_path}')
+    print(f'OCR used: {used_ocr}')
+    print(f'PDFPlumber used: {used_pdfplumber}')

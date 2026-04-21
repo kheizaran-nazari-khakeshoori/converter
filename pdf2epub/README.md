@@ -23,6 +23,18 @@ For scanned PDFs, install Tesseract OCR support as well:
 sudo apt install tesseract-ocr tesseract-ocr-fas
 ```
 
+If the PDF is badly compressed or damaged, repair it first with qpdf:
+
+```bash
+qpdf --stream-data=uncompress bride.pdf fixed.pdf
+```
+
+Then run:
+
+```bash
+python pdf2epub/main.py fixed.pdf --ocr
+```
+
 ## Usage
 
 Place `input.pdf` inside the `pdf2epub` folder, then run:
