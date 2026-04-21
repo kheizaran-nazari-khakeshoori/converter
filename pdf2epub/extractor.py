@@ -2,7 +2,10 @@ import contextlib
 import fitz  # PyMuPDF
 import io
 import os
+import shutil
+import subprocess
 import sys
+import tempfile
 
 try:
     from PIL import Image
@@ -48,18 +51,63 @@ def is_scan_like_text(text):
     return False
 
 
-def ocr_page(page):
+def render_page_with_pdftoppm(pdf_path, page_number):
+    if not shutil.which('pdftoppm'):
+        raise RuntimeError('pdftoppm is not installed. Install poppler-utils to use this fallback.')
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_prefix = os.path.join(tmpdir, 'page')
+        cmd = [
+            'pdftoppm',
+            '-f', str(page_number),
+            '-l', str(page_number),
+            '-png',
+            '-r', '300',
+            pdf_path,
+            out_prefix,
+        ]
+        with suppress_output():
+            subprocess.run(cmd, check=True)
+
+        png_path = f"{out_prefix}-{page_number}.png"
+        if not os.path.exists(png_path):
+            raise RuntimeError(f'pdftoppm did not produce output for page {page_number}')
+
+        with open(png_path, 'rb') as f:
+            return Image.open(io.BytesIO(f.read())).convert('L')
+
+
+def ocr_page(page, pdf_path=None, page_number=None):
     if Image is None or pytesseract is None:
         raise RuntimeError(
             "OCR dependencies are not installed. Install pytesseract and pillow to use OCR."
         )
 
-    with suppress_output():
-        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+    text = ""
+    img = None
+    try:
+        with suppress_output():
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
 
-    img_data = pix.tobytes("png")
-    img = Image.open(io.BytesIO(img_data)).convert("L")
-    return pytesseract.image_to_string(img, lang="fas", config="--psm 6")
+        img_data = pix.tobytes('png')
+        img = Image.open(io.BytesIO(img_data)).convert('L')
+        text = pytesseract.image_to_string(img, lang='fas', config='--psm 6')
+    except Exception:
+        pass
+
+    if not text.strip() and pdf_path is not None and page_number is not None:
+        try:
+            img = render_page_with_pdftoppm(pdf_path, page_number)
+            text = pytesseract.image_to_string(img, lang='fas', config='--psm 6')
+            if not text.strip():
+                text = pytesseract.image_to_string(img, config='--psm 6')
+        except Exception:
+            pass
+
+    if text is None:
+        text = ""
+
+    return text
 
 
 def extract_with_pdfplumber(pdf_path):
@@ -101,7 +149,7 @@ def extract_text(pdf_path, force_ocr=False):
                     full_text += text + "\n"
                     continue
 
-            text = ocr_page(page)
+            text = ocr_page(page, pdf_path=pdf_path, page_number=page_number)
             used_ocr = True
             full_text += (text or "") + "\n"
 
