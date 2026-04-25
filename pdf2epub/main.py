@@ -1,29 +1,36 @@
+import argparse
 import os
 import sys
 
-from extractor import extract_text
-from cleaner import fix_persian_text, split_paragraphs
-from epub_builder import create_epub
+from pdf2epub.extractor import extract_text
+from pdf2epub.cleaner import fix_persian_text, split_paragraphs
+from pdf2epub.epub_builder import create_epub
 
 
-if __name__ == '__main__':
-    args = sys.argv[1:]
-    force_ocr = False
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Convert a Persian PDF to EPUB with RTL support."
+    )
+    parser.add_argument("pdf_path", nargs="?", default="pdf2epub/input.pdf",
+                        help="Path to the source PDF file")
+    parser.add_argument("--output", "-o", default="output.epub",
+                        help="Output EPUB path")
+    parser.add_argument("--ocr", action="store_true",
+                        help="Force OCR extraction for scanned pages")
+    return parser.parse_args()
 
-    if '--ocr' in args:
-        force_ocr = True
-        args.remove('--ocr')
 
-    pdf_path = args[0] if args else 'input.pdf'
-    output_path = 'output.epub'
+def main(args=None):
+    args = parse_args() if args is None else args
 
-    if not os.path.isfile(pdf_path):
-        print(f"Error: PDF file not found: {pdf_path}")
-        print("Place your PDF at pdf2epub/input.pdf or pass a path as an argument.")
+    if not os.path.isfile(args.pdf_path):
+        print(f"Error: PDF file not found: {args.pdf_path}")
         sys.exit(1)
 
     try:
-        raw_text, used_ocr, used_pdfplumber = extract_text(pdf_path, force_ocr=force_ocr)
+        raw_text, used_ocr, used_pdfplumber = extract_text(
+            args.pdf_path, force_ocr=args.ocr
+        )
     except RuntimeError as exc:
         print(f"Error: {exc}")
         print("Install OCR dependencies with: pip install pytesseract pillow")
@@ -47,7 +54,11 @@ if __name__ == '__main__':
         print(p)
         print('----')
 
-    create_epub(paragraphs, output_path)
-    print(f'Created EPUB: {output_path}')
+    create_epub(paragraphs, args.output)
+    print(f'Created EPUB: {args.output}')
     print(f'OCR used: {used_ocr}')
     print(f'PDFPlumber used: {used_pdfplumber}')
+
+
+if __name__ == '__main__':
+    main()

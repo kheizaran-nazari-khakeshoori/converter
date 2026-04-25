@@ -33,6 +33,8 @@ def create_epub(paragraphs, output_path):
     """
 
     book.add_item(chapter)
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
     book.spine = ['nav', chapter]
 
     epub.write_epub(output_path, book)
