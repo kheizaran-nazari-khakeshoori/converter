@@ -110,6 +110,7 @@ celerybeat.pid
 
 # build / runtime artifacts
 output.epub
+pdf2epub/silver.pdf
 
 # mypy
 .mypy_cache/

@@ -39,7 +39,7 @@ python -m pdf2epub.main pdf2epub/silver.pdf --ocr --output output.epub
 
 ## Notes
 
-- `pdf2epub/silver.pdf` is a sample source file in this repository.
+- Use any PDF file as input; for example, `pdf2epub/silver.pdf` if you have it locally.
 - If your PDF is scanned, install Tesseract with `sudo apt install tesseract-ocr tesseract-ocr-fas`.
 
 ## Testing
