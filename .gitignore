@@ -105,6 +105,12 @@ celerybeat.pid
 .env.local
 .env.*.local
 
+# pytest
+.pytest_cache/
+
+# build / runtime artifacts
+output.epub
+
 # mypy
 .mypy_cache/
 .dmypy.json

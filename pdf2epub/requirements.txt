@@ -1,6 +1,5 @@
 pymupdf
 ebooklib
-arabic-reshaper
 python-bidi
 pytesseract
 pillow
