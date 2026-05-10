@@ -17,6 +17,12 @@ Use the package requirements:
 python -m pip install -r pdf2epub/requirements.txt
 ```
 
+Install development dependencies:
+
+```bash
+python -m pip install -r requirements-dev.txt
+```
+
 Or install locally as a package:
 
 ```bash
@@ -31,10 +37,16 @@ Convert a PDF to EPUB:
 python -m pdf2epub.main pdf2epub/silver.pdf --output output.epub
 ```
 
+Or use the package module directly:
+
+```bash
+python -m pdf2epub pdf2epub/silver.pdf --output output.epub --title "My Book" --author "Author Name"
+```
+
 To force OCR for scanned PDFs:
 
 ```bash
-python -m pdf2epub.main pdf2epub/silver.pdf --ocr --output output.epub
+python -m pdf2epub pdf2epub/silver.pdf --ocr --output output.epub
 ```
 
 ## Notes
