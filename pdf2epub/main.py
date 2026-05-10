@@ -7,7 +7,7 @@ from pdf2epub.cleaner import fix_persian_text, split_paragraphs
 from pdf2epub.epub_builder import create_epub
 
 
-def parse_args():
+def parse_args(args=None):
     parser = argparse.ArgumentParser(
         description="Convert a Persian PDF to EPUB with RTL support."
     )
@@ -15,9 +15,13 @@ def parse_args():
                         help="Path to the source PDF file")
     parser.add_argument("--output", "-o", default="output.epub",
                         help="Output EPUB path")
+    parser.add_argument("--title", default="Persian Book",
+                        help="EPUB title metadata")
+    parser.add_argument("--author", default="pdf2epub",
+                        help="EPUB author metadata")
     parser.add_argument("--ocr", action="store_true",
                         help="Force OCR extraction for scanned pages")
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def main(args=None):
@@ -54,8 +58,10 @@ def main(args=None):
         print(p)
         print('----')
 
-    create_epub(paragraphs, args.output)
+    create_epub(paragraphs, args.output, title=args.title, author=args.author)
     print(f'Created EPUB: {args.output}')
+    print(f'Title: {args.title}')
+    print(f'Author: {args.author}')
     print(f'OCR used: {used_ocr}')
     print(f'PDFPlumber used: {used_pdfplumber}')
 
